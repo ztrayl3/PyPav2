@@ -28,3 +28,6 @@ For a reason I have yet to uncover, the Pavlok 2 uses a duration of max 63 (0x3e
 
 This is a hobby project by every definition of the word, but I am working to move it from pexpect based to pygatt based for compatability and code cleanliness reasons.
 I originally created this for use in behavioral psychology experiments using the Pavlok 2 device. Works like a charm! For those with some degree of python knowledge and a desire to mess around with the device, hope this helps!
+
+Video example of code functioning (using raspberry pi zero w)
+https://youtu.be/dpEqDgbgF_0
