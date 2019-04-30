@@ -3,13 +3,18 @@
 **This is a work in progress** 
 
 A very simple python module for the Pavlok 2 habit breaker device.
-The module is essentially just a wrapper for the linux tool gatttool and therefor requires both gatttool to be installed and a linux system.
+The module is essentially just a wrapper for the linux tool gatttool.
 
-# STIMULUS RULES (Beep and vibrate only):
+# Requirements:
+- tested on python 2.7.9
+- pexpect module **(to be changes to pygatt soon!)**
+- gatttool bluetooth low energy tool (standard in ubuntu, requires BLE capable device of course)
+
+# Stimulus Arguments:
 - level: a percentage from 0% - 100%
 - count: number of times to repeat stimulus 0 - 7
-- duration_on: stimulus duration in seconds (max 10 seconds, minimum .11 seconds)
-- gap: time in milliseconds between simulus repetitions (see restrictions above ^)
+- duration_on: stimulus duration in seconds (max 10 seconds, minimum .11 seconds) **beep and vibrate only**
+- gap: time in milliseconds between simulus repetitions (see restrictions above ^) **beep and vibrate only**
 - example: device.beep(100, 2, 1, 1)
 
 - **duration equation:**
