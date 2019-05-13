@@ -1,6 +1,6 @@
-#!/usr/bin/env python
 import pexpect
 from math import log
+from datetime import datetime
 
 class Pavlok():
 
@@ -78,13 +78,19 @@ class Pavlok():
 
 
 	def battery(self):
-		print int(self.read(self.handles["battery"]), 16),'%'
+		return int(self.read(self.handles["battery"]), 16)
 
 
-	def clock(self):
-		# does not need to be converted to in, stored as plain decimals
-		# value = sec, min, hour, day, week, ???, month, year
-		print self.read(self.handles["clock"])
+	def clock(self, sync=False):
+		# does not need to be converted to hex, stored as plain decimals
+		# value = sec, min, hour, day,  ???, month, year
+		# the third to last value I have no idea what it could be so it is assigned day-of-week 0-6 (s$
+        if sync:  # synchronize system clock and device clock 
+        	time = datetime.now().strftime('%S%M%H%d0%w%m%y')
+            self.write(self.handles["clock"], time)
+			return self.read(self.handles["clock"])
+		else:
+			return self.read(self.handles["clock"])
 
 
 	def shock_count(self):

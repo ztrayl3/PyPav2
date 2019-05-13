@@ -6,8 +6,8 @@ A very simple python module for the Pavlok 2 habit breaker device.
 The module is essentially just a wrapper for the linux tool gatttool that will allow for all Pavlok app functionality and then some.
 
 # Requirements:
-- tested on python 2.7.13 and 3.5.3
-- pexpect module 
+- tested on python3.5.3
+- Modules: pexpect, math, datetime
 - gatttool (bluetooth low energy tool, standard in ubuntu with Bluez, requires BLE capable device)
 
 # Stimulus Arguments:
