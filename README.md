@@ -3,12 +3,12 @@
 **This is a work in progress** 
 
 A very simple python module for the Pavlok 2 habit breaker device.
-The module is essentially just a wrapper for the linux tool gatttool.
+The module is essentially just a wrapper for the linux tool gatttool that will allow for all Pavlok app functionality and then some.
 
 # Requirements:
-- tested on python 2.7.9
-- pexpect module **(to be changes to pygatt soon!)**
-- gatttool bluetooth low energy tool (standard in ubuntu, requires BLE capable device of course)
+- tested on python 2.7.13 and 3.5.3
+- pexpect module 
+- gatttool (bluetooth low energy tool, standard in ubuntu with Bluez, requires BLE capable device)
 
 # Stimulus Arguments:
 - level: a percentage from 0% - 100%
@@ -26,8 +26,8 @@ For a reason I have yet to uncover, the Pavlok 2 uses a duration of max 63 (0x3e
     device.beep(100)
     device.shock(5)
 
-This is a hobby project by every definition of the word, but I am working to move it from pexpect based to pygatt based for compatability and code cleanliness reasons.
-I originally created this for use in behavioral psychology experiments using the Pavlok 2 device. Works like a charm! For those with some degree of python knowledge and a desire to mess around with the device, hope this helps!
+This is a hobby project by every definition of the word, and I am working to implement every feature that the official Pavlok mobile app allows and a few extras.
+Originally created for use in behavioral psychology experiments, this repo is now just a project I maintain for fun. Hope it helps anyone else who is interested! 
 
 Video example of code functioning (using raspberry pi zero w)
 https://youtu.be/dpEqDgbgF_0

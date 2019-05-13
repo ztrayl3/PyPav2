@@ -30,8 +30,12 @@ class Pavlok():
 		return self.device.after.splitlines()[0]  # remove next line picked up by pexpect
 
 
+	def d_calc(self, value):
+		return format(int(round( log(value/0.104)/0.075) ), 'x').zfill(2)  # take duration in seconds, convert to hex value for device
+
+
 	def vibrate(self, level, count=1, duration_on=0.65, gap=0.65):
-		print "WARNING: Timing for stimulus is only accurate to about .5 seconds; account for this"
+		#print "WARNING: Timing for stimulus is only accurate to about .5 seconds; account for this"
 
 		if count < 8:
 			count = str(count)
@@ -40,16 +44,16 @@ class Pavlok():
 		level = format(level * 10, 'x').zfill(2)  # conver to hex, ensure 2 digit
 		if duration_on > 10 or gap > 10 or duration_on < 0.11 or 0 < gap < 0.11:
 			raise Exception("duration on and duration of gap cannot exceed 10 seconds or be below 0.11 seconds")
-		else:#				duration equation v
-			duration_on = format(int(round( log(duration_on/0.104)/0.075) ), 'x').zfill(2)  # result put in hex
-			gap = format(int(round( log(gap/0.104)/0.075) ), 'x').zfill(2)  # same equation for gap
+		else:
+			duration_on = self.d_calc(duration_on)
+			gap = self.d_calc(gap)
 
 		value = "8" + count + "0c" + level + duration_on + gap  # format into packet
 		self.write(self.handles["vibrate"], value)
 
 
 	def beep(self, level, count=1, duration_on=0.65, gap=0.65):
-		print "WARNING: Timing for stimulus is only accurate to about .5 seconds; account for this"
+		#print "WARNING: Timing for stimulus is only accurate to about .5 seconds; account for this"
 
 		if count < 8:
 			count = str(count)
@@ -58,9 +62,9 @@ class Pavlok():
 		level = format(level * 10, 'x').zfill(2)  # conver to hex, ensure 2 digit
 		if duration_on > 10 or gap > 10 or duration_on < 0.11 or gap < 0.11:
 			raise Exception("duration on and duration of gap cannot exceed 10 seconds or be below 0.11 seconds")
-		else:#				duration equation v
-			duration_on = format(int(round( log(duration_on/0.104)/0.075) ), 'x').zfill(2)  # result put in hex
-			gap = format(int(round( log(gap/0.104)/0.075) ), 'x').zfill(2)  # same equation for gap
+		else:
+			duration_on = self.d_calc(duration_on)
+			gap = self.d_calc(gap)
 
 		value = "8" + count + "0c" + level + duration_on + gap  # format into packet
 		self.write(self.handles["beep"], value)
@@ -68,8 +72,7 @@ class Pavlok():
 
 	def shock(self, value, count):
 		# IMPORTANT NOTE: shock is elicited 0.7 seconds after function called!
-		# be sure to account for this time difference in experiment
-		print "WARNING: Shock elicited 0.7 seconds after function call; account for this"
+		# be sure to account for this time difference in experiments
 		svalue = "8" + str(count) + format(value * 10, 'x').zfill(2)
 		self.write(self.handles["shock"], svalue)
 
