@@ -21,7 +21,7 @@ The module is essentially just a wrapper for the linux tool gatttool that will a
 For a reason I have yet to uncover, the Pavlok 2 uses a duration of max 63 (0x3e) which is about 10 seconds. I sampled every level 0-63 with as much accuracy as I could and came up with an exponential regression. The formula is y = 0.104*e^(0.0745x), y being seconds and x being duration value (0-63).
 
 # Usage
-    from pav import Pavlok
+    from pavlok import Pavlok
     device = Pavlok(mac="mac:address:of:your:device")
     device.beep(100)
     device.shock(5)
