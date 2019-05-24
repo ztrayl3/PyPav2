@@ -82,12 +82,17 @@ class Pavlok():
 		return int(self.read(self.handles["battery"]), 16)
 
 
-	def clock(self, sync=False):
+	def clock(self, sync=False, utcd=0, dst=False):
 		# does not need to be converted to hex, stored as plain decimals
 		# value = sec, min, hour, day, ???, month, year
 		# the third to last value I'm not sure what it is, im assuming it is assigned day-of-week 0-6 (starting Sunday)
-		if sync:  # synchronize system clock and device clock
-			time = datetime.now().strftime('%S%M%H%d0%w%m%y')
+		if sync:  # synchronize system clock and device clock, taking into account difference from UTC and daylight savings time if needed
+			a = datetime.now().strftime('%S %M %H %d 0%w %m %y').split(" ")
+			if dst:
+				a[2] = str(int(a[2]) + utcd - 1)
+			else:
+				a[2] = str(int(a[2]) + utcd)
+			time = ''.join(a)
 			self.write(self.handles["clock"], time)
 			return self.read(self.handles["clock"])
 		else:
