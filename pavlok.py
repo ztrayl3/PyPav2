@@ -17,7 +17,8 @@ class Pavlok():
 				"clock" : "0x001d",
 				"scount" : "0x003a",
 				"bcount" : "0x003e",
-				"vcount" : "0x0042"}
+				"vcount" : "0x0042",
+				"button_assign" : "0x0023"}
 
 
 	def write(self, handle, value):
@@ -34,19 +35,22 @@ class Pavlok():
 		return format(int(round( log(value/0.104)/0.075) ), 'x').zfill(2)  # take duration in seconds, convert to hex value for device
 
 
+	def value_check(self, l, c, d, g):
+		if c > 7:  # Count should not exceed 7 (temporary cap, to be removed)
+			return False
+		if d > 10 or g > 10 or d < 0.11 or g < 0.11:  # Duration on and duration of gap cannot exceed 10 seconds or be below 0.11 seconds (bounds of equation)
+			return False
+
 	def vibrate(self, level, count=1, duration_on=0.65, gap=0.65):
 		#print "WARNING: Timing for stimulus is only accurate to about .5 seconds; account for this"
 
-		if count < 8:
+		if self.value_check(level, count, duration_on, gap):
 			count = str(count)
-		else:
-			raise Exception("count should not exceed 7")
-		level = format(level * 10, 'x').zfill(2)  # conver to hex, ensure 2 digit
-		if duration_on > 10 or gap > 10 or duration_on < 0.11 or 0 < gap < 0.11:
-			raise Exception("duration on and duration of gap cannot exceed 10 seconds or be below 0.11 seconds")
-		else:
+			level = format(level * 10, 'x').zfill(2)  # conver to hex, ensure 2 digit
 			duration_on = self.d_calc(duration_on)
 			gap = self.d_calc(gap)
+		else:
+			raise Exception("Parameter values invalid, see code comments")
 
 		value = "8" + count + "0c" + level + duration_on + gap  # format into packet
 		self.write(self.handles["vibrate"], value)
@@ -55,25 +59,22 @@ class Pavlok():
 	def beep(self, level, count=1, duration_on=0.65, gap=0.65):
 		#print "WARNING: Timing for stimulus is only accurate to about .5 seconds; account for this"
 
-		if count < 8:
+		if self.value_check(level, count, duration_on, gap):
 			count = str(count)
-		else:
-			raise Exception("count should not exceed 7")
-		level = format(level * 10, 'x').zfill(2)  # conver to hex, ensure 2 digit
-		if duration_on > 10 or gap > 10 or duration_on < 0.11 or gap < 0.11:
-			raise Exception("duration on and duration of gap cannot exceed 10 seconds or be below 0.11 seconds")
-		else:
+			level = format(level * 10, 'x').zfill(2)  # conver to hex, ensure 2 digit
 			duration_on = self.d_calc(duration_on)
 			gap = self.d_calc(gap)
+		else:
+			raise Exception("Parameter values invalid, see code comments")
 
 		value = "8" + count + "0c" + level + duration_on + gap  # format into packet
 		self.write(self.handles["beep"], value)
 
 
-	def shock(self, value, count):
+	def shock(self, level, count):
 		# IMPORTANT NOTE: shock is elicited 0.7 seconds after function called!
 		# be sure to account for this time difference in experiments
-		svalue = "8" + str(count) + format(value * 10, 'x').zfill(2)
+		svalue = "8" + str(count) + format(level * 10, 'x').zfill(2)
 		self.write(self.handles["shock"], svalue)
 
 
@@ -83,11 +84,11 @@ class Pavlok():
 
 	def clock(self, sync=False):
 		# does not need to be converted to hex, stored as plain decimals
-		# value = sec, min, hour, day,  ???, month, year
-		# the third to last value I have no idea what it could be so it is assigned day-of-week 0-6 (s$
-        if sync:  # synchronize system clock and device clock 
-        	time = datetime.now().strftime('%S%M%H%d0%w%m%y')
-            self.write(self.handles["clock"], time)
+		# value = sec, min, hour, day, ???, month, year
+		# the third to last value I'm not sure what it is, im assuming it is assigned day-of-week 0-6 (starting Sunday)
+		if sync:  # synchronize system clock and device clock
+			time = datetime.now().strftime('%S%M%H%d0%w%m%y')
+			self.write(self.handles["clock"], time)
 			return self.read(self.handles["clock"])
 		else:
 			return self.read(self.handles["clock"])
@@ -103,4 +104,28 @@ class Pavlok():
 
 	def vibe_count(self):
 		return int(self.read(self.handles["vcount"]), 16)
+
+
+	def button_assign(self, assignment, level, count=1, duration_on=0.65, gap=0.65):
+		#  Assignments: string, either "vibrate", "beep", or "shock" (shock not working yet)
+		a =    {"vibrate" : "01",
+			"beep" : "02",
+			"shock" : "03"}
+
+		if self.value_check(level, count, duration_on, gap):
+			count = str(count)
+			level = format(level * 10, 'x').zfill(2)  # conver to hex, ensure 2 digit
+			duration_on = self.d_calc(duration_on)
+			gap = self.d_calc(gap)
+		else:
+			raise Exception("Parameter values invalid, see code comments")
+
+		value = "4" + count + "0c" + level + duration_on + gap  # format into packet, first digit = 4 for silent packet
+
+		if assignment == "shock":
+			self.write(self.handles[assignment], value.replace("0c", "")[:-4])  # special formatting for shock packet
+		else:
+			self.write(self.handles[assignment], value)
+
+		self.write(self.handles["button_assign"], a[assignment])
 
