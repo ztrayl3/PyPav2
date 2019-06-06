@@ -78,39 +78,6 @@ class Pavlok():
 		self.write(self.handles["shock"], svalue)
 
 
-	def battery(self):
-		return int(self.read(self.handles["battery"]), 16)
-
-
-	def clock(self, sync=False, utcd=0, dst=False):
-		# does not need to be converted to hex, stored as plain decimals
-		# value = sec, min, hour, day, ???, month, year
-		# the third to last value I'm not sure what it is, im assuming it is assigned day-of-week 0-6 (starting Sunday)
-		if sync:  # synchronize system clock and device clock, taking into account difference from UTC and daylight savings time if needed
-			a = datetime.now().strftime('%S %M %H %d 0%w %m %y').split(" ")
-			if dst:
-				a[2] = str(int(a[2]) + utcd - 1)
-			else:
-				a[2] = str(int(a[2]) + utcd)
-			time = ''.join(a)
-			self.write(self.handles["clock"], time)
-			return self.read(self.handles["clock"])
-		else:
-			return self.read(self.handles["clock"])
-
-
-	def shock_count(self):
-		return int(self.read(self.handles["scount"]), 16)
-
-
-	def beep_count(self):
-		return int(self.read(self.handles["bcount"]), 16)
-
-
-	def vibe_count(self):
-		return int(self.read(self.handles["vcount"]), 16)
-
-
 	def button_assign(self, assignment, level, count=1, duration_on=0.65, gap=0.65):
 		#  Assignments: string, either "vibrate", "beep", or "shock" (shock not working yet)
 		a =    {"vibrate" : "01",
@@ -133,4 +100,39 @@ class Pavlok():
 			self.write(self.handles[assignment], value)
 
 		self.write(self.handles["button_assign"], a[assignment])
+
+
+	def clock(self, sync=False, utcd=0, dst=False):
+		# does not need to be converted to hex, stored as plain decimals
+		# value = sec, min, hour, day, ???, month, year
+		# the third to last value I'm not sure what it is, im assuming it is assigned day-of-week 0-6 (starting Sunday)
+		if sync:  # synchronize system clock and device clock, using difference from UTC and daylight savings time if needed
+			a = datetime.now().strftime('%S %M %H %d 0%w %m %y').split(" ")
+			if dst:
+				a[2] = str(int(a[2]) + utcd - 1)
+			else:
+				a[2] = str(int(a[2]) + utcd)
+			time = ''.join(a)
+			self.write(self.handles["clock"], time)
+			return self.read(self.handles["clock"])
+		else:
+			return self.read(self.handles["clock"])
+
+
+	def battery(self):
+		return int(self.read(self.handles["battery"]), 16)
+
+
+	def vibe_count(self):
+		return int(self.read(self.handles["vcount"]), 16)
+
+
+	def beep_count(self):
+		return int(self.read(self.handles["bcount"]), 16)
+
+
+	def shock_count(self):
+		return int(self.read(self.handles["scount"]), 16)
+
+
 
