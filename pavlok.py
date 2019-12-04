@@ -39,10 +39,12 @@ class Pavlok():
 	def value_check(self, l, c, d=0.65, g=0.65):  # check parameters before sending information to Pavlok 2 (not usre if these are soft or hard limits, but for now they're just limits)
 		if l < 0 or l > 100:  # Level should not exceed 100% or be negative
 			return False
-		if c > 7:  # Count should not exceed 7 (temporary cap, to be removed)
+		elif c > 7:  # Count should not exceed 7 (temporary cap, to be removed)
 			return False
-		if d > 10 or g > 10 or d < 0.11 or g < 0.11:  # Duration on and duration of gap cannot exceed 10 seconds or be below 0.11 seconds (bounds of equation)
+		elif d > 10 or g > 10 or d < 0.11 or g < 0.11:  # Duration on and duration of gap cannot exceed 10 seconds or be below 0.11 seconds (bounds of equation)
 			return False
+		else:
+			return True
 
 
 	def vibrate(self, level, count=1, duration_on=0.65, gap=0.65):  # send vibrate command to Pavlok 2, should be noted that stimulus timing is not 100% precise (for experiments)
