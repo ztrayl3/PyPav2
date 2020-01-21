@@ -11,11 +11,11 @@ The module is essentially just a wrapper for the linux tool gatttool that will a
 - gatttool (bluetooth low energy tool, standard in ubuntu with Bluez, requires BLE capable device)
 
 # Stimulus Arguments:
-- level: a percentage from 0% - 100%
+- level: an integer from 0 to 10
 - count: number of times to repeat stimulus 0 - 7
 - duration_on: stimulus duration in seconds (max 10 seconds, minimum .11 seconds) **beep and vibrate only**
 - gap: time in milliseconds between simulus repetitions (see restrictions above ^) **beep and vibrate only**
-- example: device.beep(100, 2, 1, 1)
+- example: device.beep(10, 2, 1, 1)
 
 - **duration equation:**
 For a reason I have yet to uncover, the Pavlok 2 uses a duration of max 63 (0x3e) which is about 10 seconds. I sampled every level 0-63 with as much accuracy as I could and came up with an exponential regression. The formula is y = 0.104*e^(0.0745x), y being seconds and x being duration value (0-63).
@@ -23,7 +23,7 @@ For a reason I have yet to uncover, the Pavlok 2 uses a duration of max 63 (0x3e
 # Usage
     from pavlok import Pavlok
     device = Pavlok(mac="mac:address:of:your:device")
-    device.beep(100)
+    device.beep(10)
     device.shock(5)
 
 This is a hobby project by every definition of the word, and I am working to implement every feature that the official Pavlok mobile app allows and a few extras.

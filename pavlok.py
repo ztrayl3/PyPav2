@@ -36,8 +36,8 @@ class Pavlok():
 		return format(int(round( log(value/0.104)/0.075) ), 'x').zfill(2)  # take duration in seconds, convert to hex value for device
 
 
-	def value_check(self, l, c, d=0.65, g=0.65):  # check parameters before sending information to Pavlok 2 (not usre if these are soft or hard limits, but for now they're just limits)
-		if l < 0 or l > 100:  # Level should not exceed 100% or be negative
+	def value_check(self, l, c, d=0.65, g=0.65):  # check parameters before sending information to Pavlok 2 (these limits imposed as Pavlok performs unexpectedly outside of them)
+		if l < 0 or l > 10:  # Level should not exceed 10 or be negative
 			return False
 		elif c > 7:  # Count should not exceed 7 (temporary cap, to be removed)
 			return False
@@ -47,7 +47,7 @@ class Pavlok():
 			return True
 
 
-	def vibrate(self, level, count=1, duration_on=0.65, gap=0.65):  # send vibrate command to Pavlok 2, should be noted that stimulus timing is not 100% precise (for experiments)
+	def vibrate(self, level, count=1, duration_on=0.65, gap=0.65):  # send vibrate command to Pavlok 2
 
 		if self.value_check(level, count, duration_on, gap):  # proceed as long as parameters are okay
 			count = str(count)
@@ -61,7 +61,7 @@ class Pavlok():
 		self.write(self.handles["vibrate"], value)
 
 
-	def beep(self, level, count=1, duration_on=0.65, gap=0.65):  # send beep command to Pavlok 2, should be noted that stimulus timing is not 100% precise (for experiments)
+	def beep(self, level, count=1, duration_on=0.65, gap=0.65):  # send beep command to Pavlok 2
 
 		if self.value_check(level, count, duration_on, gap):  # proceed as long as parameters are okay
 			count = str(count)
@@ -75,8 +75,8 @@ class Pavlok():
 		self.write(self.handles["beep"], value)
 
 
-	def shock(self, level, count):  # send shock command to Pavlok 2, should be noted that my measurements show the shock elicited 0.7 seconds after function call
-		# shock lacks duration on and gap parameters as a safety feature, repeated shock timing should be handled outside of this function
+	def shock(self, level, count=1):  # send shock command to Pavlok 2, should be noted that my measurements show the shock elicited 0.7 seconds after function call
+		# shock lacks duration on and gap parameters as a hardware feature, repeated shock timing should be handled outside of this function
 
 		if self.value_check(level, count):  # proceed as long as parameters are okay
 			svalue = "8" + str(count) + format(level * 10, 'x').zfill(2)  # format into packet to be sent to Pavlok 2, ensuring hex, 2 digit format
