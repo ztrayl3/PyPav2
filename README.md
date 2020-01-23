@@ -22,7 +22,7 @@ Specifically, this project began as a way to implement the Pavlok 2 as a viable 
 \* *duration_on* and *gap* only apply to the beep and vibrate functions, shock does not allow for repetition beyond one shock natively. Shock repetition *can* be performed outside of the function, though there is a 700ms delay between each shock.
 
 ## Usage
-    from pavlok import Pavlok
+    from PyPav2 import Pavlok
     device = Pavlok(mac="mac:address:of:your:device")
     
     device.beep(5)
