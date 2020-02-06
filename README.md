@@ -6,6 +6,8 @@ Specifically, this project began as a way to implement the Pavlok 2 as a viable 
 
 **As of January 2020, the Pavlok 2 device and this code are in use for a psychological study at Louisiana State University testing the efficacy of the device in fear conditioning studies.**
 
+For more information on this project and the Pavlok device's inner workings, please check out the project's [wiki](https://github.com/ztrayl3/PyPav2/wiki), Becky Stern's wonderfully useful [Pavlok Teardown](https://beckystern.com/2020/01/28/pavlok-teardown/), and of course the [Pavlok official website](https://pavlok.com/)
+
 ## Requirements:
 - The module has been tested on both Python 2.7.13 and Python 3.5.3
 - Modules necessary: pexpect, math, datetime
@@ -21,33 +23,35 @@ Specifically, this project began as a way to implement the Pavlok 2 as a viable 
 
 \* *duration_on* and *gap* only apply to the beep and vibrate functions, shock does not allow for repetition beyond one shock natively. Shock repetition *can* be performed outside of the function, though there is a 700ms delay between each shock.
 
-## Usage
+### Usage
     from PyPav2 import Pavlok
     device = Pavlok(mac="mac:address:of:your:device")
     
     device.beep(5)
+    device.shock(2, count=2)
     device.beep(10, count=1, duration_on=1.5)
     device.vibrate(10, count=2, duration_on=1, gap=.5)
-    
-    device.shock(5)
-    device.shock(5, count=1)
 
-# Reverse Engineering the Pavlok 2
+    device.button_assign("vibrate", 7, count=2, duration_on=.5, gap=.5)
 
-This all began as a personal project in spite towards my lab's shock device. We utilise a Biopac STM100C Programmable Stimulator Module alongside a Biopac STMISOC Stimulation Isolation Adapter. While these devices are incredibly powerful and precise, for some laboratories they may be prohibitively expensive, with just the STMISOC running around $450. My P.I. had backed the Pavlok on Kickstarter for as an affective psychologist he was interested in the device's potential in research. After some time, I picked up the project as a programming challenge with the potential for a study and took it from there.
+## Clock Arguments:
+- sync: boolean value to synchronize Pavlok 2 clock with computer's UTC time
+- utcd: integer difference of local timezone from UTC (ex: US Central time = -5)
+- dst: boolean value to adjust for US daylight savings time
 
-The officialy Pavlok API exists, but it does not allow direct connection and control of the device. The entire process is routed through an online service, and that wouldn't do. Since the officialy API is web hosted, there was no documentation for the functioning of the device. Thanks to a piece of software called [btlejuice](https://github.com/DigitalSecurity/btlejuice) and some spare Raspberry Pi's I had lying around, I was able to effectively perform a MITM "attack" on my phone and log all the packets running from the Pavlok app to the device itself.
+### Usage
+    device.clock()  # return time from Pavlok 2 on-board clock
+    device.clock(sync=True)  # synchronize clock to UTC time on computer
+    device.clock(sync=True, utcd=-5, dst=False)  # synchronize clock to local time, denoted by UTC difference and daylight savings time
 
-The device communicates with its host via the BLE GATT protocol, wherein specific "handles" are assigned to functions in the device. Packets are more-or-less sent to these handle addresses and the device executes the command if it fits the correct syntax (I am no expert on GATT, but for further reading, see [this page](https://www.bluetooth.com/specifications/gatt/). While some GATT attributes have standardized handles (such as battery and firmware), most are proprietary and not advertised by the Pavlok device. However, thanks to the android tool [nRF connect](https://play.google.com/store/apps/details?id=no.nordicsemi.android.mcp&hl=en_US), I was able to see every attribute open to recieving packets on the Pavlok, all of their handles, and *with human readable names*. From there, I went back to my MITM setup and executed every function the official Pavlok app had, and at every intensity level and possible configuration. With all possible data logged between the app and the device, I went to breaking down the packets.
+## Miscellaneous Functions:
+    device.battery()  # returns integer battery percentage
+    device.vibe_count()  # returns integer tally of vibrate calls
+    device.beep_count()  # returns integer tally of beep calls
+    device.shock_count()  # returns integer tally of shock calls
 
-Not every part of the communication protocol is figured out, as I am again no expert in any of this, but for better or for worse a solid pattern exists for all stimuli commands. Data is formatted as "8(number of repetitions)0c(level of intensity)(duration_on)(gap between repetitions)", all values being integers converted to hexidecimal values. The "8" and the "0c" are still a work in progress. Shock only utilises count and level, for some reason sending a much shorter packet than the other stimuli. Other handles such as "Button Assign" and "Clock" have specific formats as well, but those were a bit easier to figure out by just figitting with settings in the Pavlok app and seeing what it communicated to the device. 
-
-What was the most odd was the existence of a duration option and a gap between repetitions, as these features are not available in the app. In fact, I only figured out their use by randomly assigning values and seeing what would happen. Furthermore, they don't seem to accept values the same way as the other fields, and I couldn't quite find a pattern. Instead, I sampled every level (0-63, in hex) with as much stopwatch accuracy as I could get with my computer and came up with an exponential regression that rather accurately calculates a time in seconds from a given hex value. The user entered time, in seconds, is fed to the model and the hex value returned is sent to the device.
-![Model](https://github.com/ztrayl3/PyPav2/blob/master/Pavlok%20Graph.png "Pavlok Duration and Gap Model")
-
-From there, the PyPav2 module simply offers a python wrapper for a gatttool interface. It establishes a BLE connection with the Pavlok 2 **(pairing your linux computer with the Pavlok may be a bit of a hassle but I got it eventually and it hasn't offered me trouble since)** and then takes human input, converts it to hex packets, and sends it through gatttool to the correct address on the device.
-
-The project has been loads of fun and a great challenge in terms of my computer science abilities. Follow any updates on the progress of our official Pavlok research study on the [Pavlok official subreddit](https://www.reddit.com/r/Pavlok/)! *Please note that this project is in no way funded or supported by the Pavlok company (if only) and is entirely a personal and non-profit endeavor*
-
-Video example using a Raspberry Pi Zero w
-https://youtu.be/dpEqDgbgF_0
+## On the way (hopefully):
+- a button count function
+- LED control
+- accelerometer/gyroscope access
+- alarm configuration
