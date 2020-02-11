@@ -6,7 +6,13 @@ Specifically, this project began as a way to implement the Pavlok 2 as a viable 
 
 **As of January 2020, the Pavlok 2 device and this code are in use for a psychological study at Louisiana State University testing the efficacy of the device in fear conditioning studies.**
 
-For more information on this project and the Pavlok device's inner workings, please check out the project's [wiki](https://github.com/ztrayl3/PyPav2/wiki), Becky Stern's wonderfully useful [Pavlok Teardown](https://beckystern.com/2020/01/28/pavlok-teardown/), and of course the [Pavlok official website](https://pavlok.com/)
+For more information on this project and the Pavlok device's inner workings, please check out:
+
+**the project's [wiki page](https://github.com/ztrayl3/PyPav2/wiki),**
+
+Becky Stern's wonderfully useful [Pavlok Teardown](https://beckystern.com/2020/01/28/pavlok-teardown/),
+
+and of course the [Pavlok official website](https://pavlok.com/)
 
 ## Requirements:
 - The module has been tested on both Python 2.7.13 and Python 3.5.3
