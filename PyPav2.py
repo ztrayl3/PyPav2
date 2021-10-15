@@ -10,24 +10,24 @@ class Pavlok():
 		self.device.sendline("connect")
 		self.device.expect("Connection successful", timeout=5)  # establish a connection with the Pavlok 2
 
-		# gatttool sends commands by handle, below are all the handles the program has control over so far (more to come!)
-		self.handles = {"vibrate" : "0x0010",
-				"beep" : "0x0013",
-				"shock" : "0x0016",
-				"battery" : "0x006d",
-				"clock" : "0x001d",
-				"scount" : "0x003a",
-				"bcount" : "0x003e",
-				"vcount" : "0x0042",
-				"button_assign" : "0x0023"}
+		# gatttool sends commands by uuid, below are all the uuids the program has control over so far (more to come!)
+		self.uuids = {"vibrate" : "00001001-0000-1000-8000-00805f9b34fb",
+				"beep" : "00001002-0000-1000-8000-00805f9b34fb",
+				"shock" : "00001003-0000-1000-8000-00805f9b34fb",
+				"battery" : "00002a19-0000-1000-8000-00805f9b34fb",
+				"clock" : "00001005-0000-1000-8000-00805f9b34fb",
+				"scount" : "00002005-0000-1000-8000-00805f9b34fb",
+				"bcount" : "00002006-0000-1000-8000-00805f9b34fb",
+				"vcount" : "00002007-0000-1000-8000-00805f9b34fb",
+				"button_assign" : "00001007-0000-1000-8000-00805f9b34fb"}
+		# switch to pygatt and use uuids
+
+	def write(self, uuid, value):  # wrapper for gatttool/pexpect write
+		self.device.sendline("char-write-req {} {}".format(uuid, value))  # write value to requested value uuid
 
 
-	def write(self, handle, value):  # wrapper for gatttool/pexpect write
-		self.device.sendline("char-write-req {} {}".format(handle, value))  # write value to requested value handle
-
-
-	def read(self, handle):  # wrapper for gatttool/pexpect read
-		self.device.sendline("char-read-hnd {}".format(handle))  # read value from requested value handle
+	def read(self, uuid):  # wrapper for gatttool/pexpect read
+		self.device.sendline("char-read-hnd {}".format(uuid))  # read value from requested value uuid
 		self.device.expect(r"(?<=Characteristic value/descriptor: ).*", timeout=5)  # trim away gatttool excess text
 		return self.device.after.splitlines()[0]  # remove next line picked up by pexpect, unnecessary
 
@@ -58,7 +58,7 @@ class Pavlok():
 			raise Exception("Parameter values invalid")
 
 		value = "8" + count + "0c" + level + duration_on + gap  # format into packet to be sent to Pavlok 2
-		self.write(self.handles["vibrate"], value)
+		self.write(self.uuids["vibrate"], value)
 
 
 	def beep(self, level, count=1, duration_on=0.65, gap=0.65):  # send beep command to Pavlok 2
@@ -72,7 +72,7 @@ class Pavlok():
 			raise Exception("Parameter values invalid")
 
 		value = "8" + count + "0c" + level + duration_on + gap  # format into packet to be sent to Pavlok 2
-		self.write(self.handles["beep"], value)
+		self.write(self.uuids["beep"], value)
 
 
 	def shock(self, level, count=1):  # send shock command to Pavlok 2, should be noted that my measurements show the shock elicited 0.7 seconds after function call
@@ -82,7 +82,7 @@ class Pavlok():
 			svalue = "8" + str(count) + format(level * 10, 'x').zfill(2)  # format into packet to be sent to Pavlok 2, ensuring hex, 2 digit format
 		else:
 			raise Exception("Parameter values invalid")
-		self.write(self.handles["shock"], svalue)
+		self.write(self.uuids["shock"], svalue)
 
 
 	def button_assign(self, assignment, level, count=1, duration_on=0.65, gap=0.65):  # Assign a stimulus to the Pavlok 2's main button
@@ -101,11 +101,11 @@ class Pavlok():
 		value = "4" + count + "0c" + level + duration_on + gap  # format into packet, first digit = 4 for silent packet (does not elicit stimulus, just assigns it)
 
 		if assignment == "shock":
-			self.write(self.handles[assignment], value.replace("0c", "")[:-4])  # special formatting for shock packet, shorter than other stimulus
+			self.write(self.uuids[assignment], value.replace("0c", "")[:-4])  # special formatting for shock packet, shorter than other stimulus
 		else:
-			self.write(self.handles[assignment], value)
+			self.write(self.uuids[assignment], value)
 
-		self.write(self.handles["button_assign"], a[assignment])
+		self.write(self.uuids["button_assign"], a[assignment])
 
 
 	def clock(self, sync=False, utcd=0, dst=False):  # access Pavlok 2 clock, with utcd as difference from UTC in hours (int) and dst as Daylight Savings Time (bool)
@@ -119,23 +119,23 @@ class Pavlok():
 			else:
 				a[2] = str(int(a[2]) + utcd)
 			time = ''.join(a)
-			self.write(self.handles["clock"], time)
-			return self.read(self.handles["clock"])
+			self.write(self.uuids["clock"], time)
+			return self.read(self.uuids["clock"])
 		else:
-			return self.read(self.handles["clock"])  # if we aren't syncing, just return clock time
+			return self.read(self.uuids["clock"])  # if we aren't syncing, just return clock time
 
 
 	def battery(self):  # check battery level, returns human readable integer percentage
-		return int(self.read(self.handles["battery"]), 16)
+		return int(self.read(self.uuids["battery"]), 16)
 
 
 	def vibe_count(self):  # check vibration tally, returns human readable integer
-		return int(self.read(self.handles["vcount"]), 16)
+		return int(self.read(self.uuids["vcount"]), 16)
 
 
 	def beep_count(self):  # check beep tally, returns human readable integer
-		return int(self.read(self.handles["bcount"]), 16)
+		return int(self.read(self.uuids["bcount"]), 16)
 
 
 	def shock_count(self):  # check shock tally, returns human readable integer
-		return int(self.read(self.handles["scount"]), 16)
+		return int(self.read(self.uuids["scount"]), 16)

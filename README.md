@@ -2,9 +2,7 @@
 
 A simple python module for the [Pavlok 2](https://www.pavlok.com) habit breaking device. The product was released with an API that utilizes a web service, but this module directly connects to the device via Bluetooth Low Energy (BLE). While the module is essentially a wrapper around the linux gatttool, the code allows for very simple usage of the Pavlok 2 device.
 
-Specifically, this project began as a way to implement the Pavlok 2 as a viable and cost effective alternative fear conditioning tool in behavioral psychology. An easy python interface, convenient attachment to the subject, and effective shock elliciting allow it to potentially serve a purpose in psychology research as well as consumer use.
-
-**As of January 2020, the Pavlok 2 device and this code are in use for a psychological study at Louisiana State University testing the efficacy of the device in fear conditioning studies.**
+Specifically, this project began as a way to implement the Pavlok 2 as a viable and cost effective alternative fear conditioning tool in behavioral psychology. An easy python interface, convenient attachment to the subject, and effective shock elliciting allow it to potentially serve a purpose in psychology research as well as consumer use. As of Fall 2021, it is currently planned to be used in an EEG study with human subjects!
 
 For more information on this project and the Pavlok device's inner workings, please check out:
 
@@ -15,7 +13,7 @@ Becky Stern's wonderfully useful [Pavlok Teardown](https://beckystern.com/2020/0
 and of course the [Pavlok official website](https://pavlok.com/)
 
 ## Requirements:
-- The module has been tested on both Python 2.7.13 and Python 3.5.3
+- Python 3 (works on Python 2 as well, but support has ended)
 - Modules necessary: pexpect, math, datetime
 - Gatttool (bluetooth low energy tool, standard in Ubuntu with Bluez, requires a BLE capable device)
 *Please note that this software has only been tested in Linux and with the Bluez tools, Windows may eventually have compatability but not in the near future*
@@ -56,7 +54,8 @@ and of course the [Pavlok official website](https://pavlok.com/)
     device.beep_count()  # returns integer tally of beep calls
     device.shock_count()  # returns integer tally of shock calls
 
-## On the way (hopefully):
+## To-Do:
+- implement in pygatt not pexpect
 - a button count function
 - LED control
 - accelerometer/gyroscope access
