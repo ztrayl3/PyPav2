@@ -4,7 +4,7 @@ from datetime import datetime
 
 class Pavlok():
 
-	def __init__(self, mac="FA:E5:08:A8:DB:D7"):  # mac address defaults to my testing unit if not specified
+	def __init__(self, mac="F8:77:23:11:F7:46"):  # mac address defaults to my testing unit if not specified
 		self.device = pexpect.spawn("gatttool -t random -b {} -I".format(mac))  # core of the function, based around gatttool (a component of Bluez)
 
 		self.device.sendline("connect")
