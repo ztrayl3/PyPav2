@@ -1,40 +1,45 @@
-import pexpect
+from bleak import BleakClient
+from threading import Thread
+import asyncio
 from math import log
 from datetime import datetime
 
 class Pavlok():
 
 	def __init__(self, mac="F8:77:23:11:F7:46"):  # mac address defaults to my testing unit if not specified
-		self.device = pexpect.spawn("gatttool -t random -b {} -I".format(mac))  # core of the function, based around gatttool (a component of Bluez)
+		self.e_loop = asyncio.get_event_loop()
 
-		self.device.sendline("connect")
-		self.device.expect("Connection successful", timeout=5)  # establish a connection with the Pavlok 2
+		def bleak_thread(loop):
+			asyncio.set_event_loop(loop)
+			loop.run_forever()
+		Thread(target=bleak_thread, args=(self.e_loop,)).start()
+
+		self.client = BleakClient(mac)
+
+		asyncio.run_coroutine_threadsafe(self.client.connect(), self.e_loop).result(10)
+
+		self.features = {}
+		for characteristic in self.client.services.characteristics.values():
+			if characteristic.description in ["Vibe", "Beep", "Zap"]:
+				self.features[characteristic.description] = characteristic
 
 		# gatttool sends commands by handle, below are all the handles the program has control over so far (more to come!)
-		self.handles = {"vibrate" : "0x0010",
-				"beep" : "0x0013",
-				"shock" : "0x0016",
-				"battery" : "0x006d",
-				"clock" : "0x001d",
-				"scount" : "0x003a",
-				"bcount" : "0x003e",
-				"vcount" : "0x0042",
-				"button_assign" : "0x0023"}
+		self.handles = {"vibrate" : 15,
+				"beep" : 18,
+				"shock" : 21,
+				"battery" : 106,
+				"clock" : 28,
+				"button_assign" : 34}
 
 
 	def write(self, handle, value):  # wrapper for gatttool/pexpect write
-		self.device.sendline("char-write-req {} {}".format(handle, value))  # write value to requested value handle
-
+		asyncio.run_coroutine_threadsafe(self.client.write_gatt_char(handle, bytes.fromhex(value), response=True), self.e_loop)
 
 	def read(self, handle):  # wrapper for gatttool/pexpect read
-		self.device.sendline("char-read-hnd {}".format(handle))  # read value from requested value handle
-		self.device.expect(r"(?<=Characteristic value/descriptor: ).*", timeout=5)  # trim away gatttool excess text
-		return self.device.after.splitlines()[0]  # remove next line picked up by pexpect, unnecessary
-
+		return asyncio.run_coroutine_threadsafe(self.client.read_gatt_char(handle), self.e_loop).result(5)
 
 	def d_calc(self, value):  # mathmatical function to calculate duration in hex when given desired number of seconds (see readme for more explanation)
 		return format(int(round( log(value/0.104)/0.075) ), 'x').zfill(2)  # take duration in seconds, convert to hex value for device
-
 
 	def value_check(self, l, c, d=0.65, g=0.65):  # check parameters before sending information to Pavlok 2 (these limits imposed as Pavlok performs unexpectedly outside of them)
 		if l < 0 or l > 10:  # Level should not exceed 10 or be negative
@@ -45,7 +50,6 @@ class Pavlok():
 			return False
 		else:
 			return True
-
 
 	def vibrate(self, level, count=1, duration_on=0.65, gap=0.65):  # send vibrate command to Pavlok 2
 
@@ -60,7 +64,6 @@ class Pavlok():
 		value = "8" + count + "0c" + level + duration_on + gap  # format into packet to be sent to Pavlok 2
 		self.write(self.handles["vibrate"], value)
 
-
 	def beep(self, level, count=1, duration_on=0.65, gap=0.65):  # send beep command to Pavlok 2
 
 		if self.value_check(level, count, duration_on, gap):  # proceed as long as parameters are okay
@@ -74,7 +77,6 @@ class Pavlok():
 		value = "8" + count + "0c" + level + duration_on + gap  # format into packet to be sent to Pavlok 2
 		self.write(self.handles["beep"], value)
 
-
 	def shock(self, level, count=1):  # send shock command to Pavlok 2, should be noted that my measurements show the shock elicited 0.7 seconds after function call
 		# shock lacks duration on and gap parameters as a hardware feature, repeated shock timing should be handled outside of this function
 
@@ -83,7 +85,6 @@ class Pavlok():
 		else:
 			raise Exception("Parameter values invalid")
 		self.write(self.handles["shock"], svalue)
-
 
 	def button_assign(self, assignment, level, count=1, duration_on=0.65, gap=0.65):  # Assign a stimulus to the Pavlok 2's main button
 		#  Assignments: string, either "vibrate", "beep", or "shock" (shock not working yet)
@@ -107,7 +108,6 @@ class Pavlok():
 
 		self.write(self.handles["button_assign"], a[assignment])
 
-
 	def clock(self, sync=False, utcd=0, dst=False):  # access Pavlok 2 clock, with utcd as difference from UTC in hours (int) and dst as Daylight Savings Time (bool)
 		# does not need to be converted to hex, stored as plain decimals
 		# value = sec, min, hour, day, week, month, year
@@ -124,18 +124,14 @@ class Pavlok():
 		else:
 			return self.read(self.handles["clock"])  # if we aren't syncing, just return clock time
 
-
 	def battery(self):  # check battery level, returns human readable integer percentage
 		return int(self.read(self.handles["battery"]), 16)
 
-
 	def vibe_count(self):  # check vibration tally, returns human readable integer
-		return int(self.read(self.handles["vcount"]), 16)
-
+		raise NotImplementedError
 
 	def beep_count(self):  # check beep tally, returns human readable integer
-		return int(self.read(self.handles["bcount"]), 16)
-
+		raise NotImplementedError
 
 	def shock_count(self):  # check shock tally, returns human readable integer
-		return int(self.read(self.handles["scount"]), 16)
+		raise NotImplementedError
