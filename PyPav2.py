@@ -18,11 +18,6 @@ class Pavlok():
 
 		asyncio.run_coroutine_threadsafe(self.client.connect(), self.e_loop).result(10)
 
-		self.features = {}
-		for characteristic in self.client.services.characteristics.values():
-			if characteristic.description in ["Vibe", "Beep", "Zap"]:
-				self.features[characteristic.description] = characteristic
-
 		# gatttool sends commands by handle, below are all the handles the program has control over so far (more to come!)
 		self.handles = {"vibrate" : 15,
 				"beep" : 18,
