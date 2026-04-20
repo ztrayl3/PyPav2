@@ -15,10 +15,11 @@ Becky Stern's wonderfully useful [Pavlok Teardown](https://beckystern.com/2020/0
 and of course the [Pavlok official website](https://pavlok.com/)
 
 ## Requirements:
-- The module has been tested on both Python 2.7.13 and Python 3.5.3
-- Modules necessary: pexpect, math, datetime
-- Gatttool (bluetooth low energy tool, standard in Ubuntu with Bluez, requires a BLE capable device)
-*Please note that this software has only been tested in Linux and with the Bluez tools, Windows may eventually have compatability but not in the near future*
+- Python 3.10+
+- [`bleak`](https://github.com/hbldh/bleak) (`pip install bleak`) — modern, cross-platform BLE library
+- A BLE-capable adapter. On Linux this uses BlueZ over D-Bus (BlueZ 5.55+ recommended).
+
+The original version of this module wrapped `gatttool` from BlueZ via `pexpect`. `gatttool` has been deprecated upstream for years and is no longer shipped on most current distros (including Arch), so the module was ported to `bleak`, which talks to BlueZ directly over D-Bus and also works on macOS and Windows.
 
 ## Stimulus Arguments:
 - level: an integer from 0 to 10
@@ -30,15 +31,21 @@ and of course the [Pavlok official website](https://pavlok.com/)
 \* *duration_on* and *gap* only apply to the beep and vibrate functions, shock does not allow for repetition beyond one shock natively. Shock repetition *can* be performed outside of the function, though there is a 700ms delay between each shock.
 
 ### Usage
-    from PyPav2 import Pavlok
-    device = Pavlok(mac="mac:address:of:your:device")
-    
-    device.beep(5)
-    device.shock(2, count=2)
-    device.beep(10, count=1, duration_on=1.5)
-    device.vibrate(10, count=2, duration_on=1, gap=.5)
+All device methods are now `async` (bleak is asyncio-based). Use the class as an async context manager:
 
-    device.button_assign("vibrate", 7, count=2, duration_on=.5, gap=.5)
+    import asyncio
+    from PyPav2 import Pavlok
+
+    async def main():
+        async with Pavlok(mac="mac:address:of:your:device") as device:
+            await device.beep(5)
+            await device.shock(2, count=2)
+            await device.beep(10, count=1, duration_on=1.5)
+            await device.vibrate(10, count=2, duration_on=1, gap=.5)
+
+            await device.button_assign("vibrate", 7, count=2, duration_on=.5, gap=.5)
+
+    asyncio.run(main())
 
 ## Clock Arguments:
 - sync: boolean value to synchronize Pavlok 2 clock with computer's UTC time
@@ -46,15 +53,15 @@ and of course the [Pavlok official website](https://pavlok.com/)
 - dst: boolean value to adjust for US daylight savings time
 
 ### Usage
-    device.clock()  # return time from Pavlok 2 on-board clock
-    device.clock(sync=True)  # synchronize clock to UTC time on computer
-    device.clock(sync=True, utcd=-5, dst=False)  # synchronize clock to local time, denoted by UTC difference and daylight savings time
+    await device.clock()  # return time from Pavlok 2 on-board clock
+    await device.clock(sync=True)  # synchronize clock to UTC time on computer
+    await device.clock(sync=True, utcd=-5, dst=False)  # synchronize clock to local time, denoted by UTC difference and daylight savings time
 
 ## Miscellaneous Functions:
-    device.battery()  # returns integer battery percentage
-    device.vibe_count()  # returns integer tally of vibrate calls
-    device.beep_count()  # returns integer tally of beep calls
-    device.shock_count()  # returns integer tally of shock calls
+    await device.battery()  # returns integer battery percentage
+    await device.vibe_count()  # returns integer tally of vibrate calls
+    await device.beep_count()  # returns integer tally of beep calls
+    await device.shock_count()  # returns integer tally of shock calls
 
 ## On the way (hopefully):
 - a button count function
